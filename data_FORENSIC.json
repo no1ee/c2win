@@ -1,0 +1,54 @@
+{
+    "Title": "Forensic Medicine Revision 1",
+    "Legal_procedures": {
+        "Types_of_offenses": {
+            "Cognizable_offense": {
+                "Description": "Police can arrest without warrant",
+                "Reference": "a© CrPC",
+                "Example": "e.g., Murder, robbery, rape."
+            },
+            "Non_cognizable_offense": {
+                "Description": "Police can arrest with warrant only",
+                "Reference": "a@ CrPC",
+                "Example": "e.g., Simple hurt."
+            }
+        },
+        "Punishment": {
+            "Less_than_2_years": "< 2 years of imprisonment",
+            "More_than_2_years": "> 2 years of imprisonment"
+        },
+        "Inquest_Enquiry": {
+            "Police_inquest": {
+                "Reference": "174 CrPC",
+                "Followed_in_India": "Yes"
+            },
+            "Magistrate_inquest": {
+                "Reference": "176 CrPC",
+                "Superior_to_police_inquest": "Yes",
+                "Followed_in_India": "Not followed in India."
+            },
+            "Coroners_inquest": {
+                "Followed_in_India": "Not followed in India."
+            },
+            "Medical_examiner_system": {
+                "Overall_best": "Yes",
+                "Followed_in_India": "Not followed in India."
+            }
+        },
+        "Police_inquest_details": {
+            "Minimum_rank": "Head constable",
+            "Enquiry_report": "Panchanama (prepared by IO)",
+            "Power_of_IO_to_summon_witness": "175 CrPC"
+        },
+        "Magistrate_inquest_types": {
+            "Judicial_magistrate": {
+                "Appointed_by": "High court",
+                "Conduct_inquest_in": "custodial death/rape/dowry death (suspected)/exhumation"
+            },
+            "Executive_magistrate": {
+                "Appointed_by": "State government",
+                "Conduct_inquest_in": "dowry death (suspected) & exhumation"
+            }
+        }
+    }
+}

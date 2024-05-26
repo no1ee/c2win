@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forensic Medicine Revision</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .node {
+            cursor: pointer;
+            user-select: none;
+            margin: 30px 0; /* Increased vertical spacing */
+            padding: 10px 20px;
+            border: 2px solid blue;
+            border-radius: 20px;
+            display: inline-block;
+            position: relative;
+            transition: background-color 0.3s, border-color 0.3s;
+            background-color: rgba(255, 255, 255, 0.5); /* 50% opacity */
+            max-width: fit-content;
+        }
+
+        .node.active {
+            background-color: rgba(144, 238, 144, 0.5); /* Lighter green color with 50% opacity */
+            border-color: #90EE90;
+        }
+
+        .nested {
+            display: none;
+            margin-left: 100px; /* Increased margin for better spacing */
+            position: relative;
+        }
+
+        .active {
+            display: block;
+        }
+
+        #flowchart-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        path {
+            stroke-width: 1; /* Thinner lines */
+            opacity: 0.7; /* Decreased opacity */
+            fill: none;
+        }
+
+        select {
+            margin-bottom: 20px;
+            padding: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="title">Choose a Subject</h1>
+    <select id="subject-selector">
+        <option value="data_FORENSIC.json">Forensic Medicine Revision 1</option>
+        <option value="data_OBG.json">OBG</option>
+        <option value="data_ORTHOPEDICS.json">Another Subject</option>
+        <!-- Add more options as needed -->
+    </select>
+    <div id="flowchart-container">
+        <div id="flowchart"></div>
+        <svg id="svg-container"></svg>
+    </div>
+
+    <script>
+        async function fetchData(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                return null;
+            }
+        }
+
+        const colors = ['#FF5733', '#33FF57', '#3357FF', '#FF33A6', '#A633FF', '#33FFF9'];
+
+        function getRandomColor() {
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function createNode(text, isLeaf = false) {
+            const node = document.createElement('div');
+            node.className = 'node';
+            node.textContent = text;
+            node.dataset.color = getRandomColor(); // Assign a random color to each node
+            if (!isLeaf) {
+                node.onclick = () => {
+                    const color = getRandomColor();
+                    applyColorToChildren(node, color);
+                    const nextElement = node.nextElementSibling;
+                    if (nextElement && nextElement.classList.contains('nested')) {
+                        nextElement.classList.toggle('active');
+                        node.classList.toggle('active');
+                        updateSvgPaths();
+                    }
+                };
+            }
+            return node;
+        }
+
+        function applyColorToChildren(node, color) {
+            node.style.borderColor = color;
+            node.style.backgroundColor = hexToRgba(color, 0.5); // Set 50% opacity
+            const nested = node.nextElementSibling;
+            if (nested && nested.classList.contains('nested')) {
+                const children = nested.querySelectorAll('.node');
+                children.forEach(child => {
+                    applyColorToChildren(child, color);
+                });
+            }
+        }
+
+        function hexToRgba(hex, alpha) {
+            let r = 0, g = 0, b = 0;
+            if (hex.length === 4) {
+                r = parseInt(hex[1] + hex[1], 16);
+                g = parseInt(hex[2] + hex[2], 16);
+                b = parseInt(hex[3] + hex[3], 16);
+            } else if (hex.length === 7) {
+                r = parseInt(hex[1] + hex[2], 16);
+                g = parseInt(hex[3] + hex[4], 16);
+                b = parseInt(hex[5] + hex[6], 16);
+            }
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function renderData(container, data) {
+            container.innerHTML = ''; // Clear existing content
+            for (const key in data) {
+                if (typeof data[key] === 'object' && !Array.isArray(data[key])) {
+                    const node = createNode(key);
+                    const nestedContainer = document.createElement('div');
+                    nestedContainer.className = 'nested';
+                    renderData(nestedContainer, data[key]);
+                    container.appendChild(node);
+                    container.appendChild(nestedContainer);
+                } else {
+                    const node = createNode(`${key}: ${data[key]}`, true);
+                    container.appendChild(node);
+                }
+            }
+        }
+
+        function updateSvgPaths() {
+            const svgContainer = document.getElementById('svg-container');
+            svgContainer.innerHTML = ''; // Clear existing paths
+
+            const nodes = document.querySelectorAll('.node');
+            nodes.forEach(node => {
+                const nextElement = node.nextElementSibling;
+                if (nextElement && nextElement.classList.contains('nested') && nextElement.classList.contains('active')) {
+                    const children = nextElement.querySelectorAll(':scope > .node'); // Only immediate children
+                    children.forEach(child => {
+                        const path = createSvgPath(node, child);
+                        path.setAttribute('stroke', node.dataset.color); // Use the parent's color for the path
+                        svgContainer.appendChild(path);
+                    });
+                }
+            });
+        }
+
+        function createSvgPath(startElement, endElement) {
+            const startRect = startElement.getBoundingClientRect();
+            const endRect = endElement.getBoundingClientRect();
+
+            const containerRect = document.getElementById('flowchart-container').getBoundingClientRect();
+
+            const startX = startRect.right - containerRect.left;
+            const startY = startRect.top + startRect.height / 2 - containerRect.top;
+            const endX = endRect.left - containerRect.left;
+            const endY = endRect.top + endRect.height / 2 - containerRect.top;
+
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const d = `M${startX} ${startY} C${startX + 50} ${startY}, ${endX - 50} ${endY}, ${endX} ${endY}`;
+            path.setAttribute('d', d);
+
+            return path;
+        }
+
+        async function loadData(file) {
+            const data = await fetchData(file);
+            if (data) {
+                document.getElementById('title').textContent = data.Title;
+                delete data.Title;
+                const flowchartContainer = document.getElementById('flowchart');
+                renderData(flowchartContainer, data);
+                updateSvgPaths();
+            }
+        }
+
+        document.getElementById('subject-selector').addEventListener('change', function() {
+            const selectedFile = this.value;
+            loadData(selectedFile);
+        });
+
+        // Load the first file by default
+        loadData(document.getElementById('subject-selector').value);
+    </script>
+</body>
+</html>
